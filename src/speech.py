@@ -2,7 +2,7 @@ import speech_recognition as sr
 import alfanous
 import json
 
-from printQuranSearchResults import printResults
+from processResults import getMatchItem, printResults
 
 
 r = sr.Recognizer()
@@ -29,8 +29,28 @@ try:
             # we need some special handling here to correctly print unicode characters to standard output
             if str is bytes: # this version of Python uses bytes for strings (Python 2)
                 print(u"You said {}".format(value).encode("utf-8"))
-                ayahs = alfanous.do({"action": "search", "query": '"' + value + '"'})["search"]["ayas"]
-                printResults(ayahs)
+                ayahs = alfanous.do({"action": "search", "query": value})["search"]["ayas"]
+                matched = printResults(ayahs)
+                if not matched:
+                    suggestionsObj = alfanous.do({"action": "suggest", "query": value})["suggest"]
+                    suggestions = {}
+                    for a in suggestionsObj:
+                        suggestions[a] = []
+                        b = suggestionsObj[a]
+                        for c in b:
+                            suggestions[a].append(c)
+                    
+                    for i in suggestions:
+                        for j in suggestions[i]:
+                            value = value.replace(i, j)
+                            # print i
+                            # print j
+                            print value
+                            sAyahs = alfanous.do({"action": "search", "query": value})["search"]["ayas"]
+                            sMatched = printResults(sAyahs)
+
+
+
             else: # this version of Python uses unicode for strings (Python 3+)
                 print("You said {}".format(value))
         except sr.UnknownValueError:

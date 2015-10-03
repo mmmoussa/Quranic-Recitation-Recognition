@@ -2,11 +2,18 @@
 
 import alfanous
 
-from printQuranSearchResults import printResults
+from processResults import getMatchItem, printResults
 
 
 value = u"و التين و الزيتون"
 
-ayahs = alfanous.do({"action":"search", "query":value, "fuzzy": "True"})["search"]["ayas"]
-printResults(ayahs)
+suggestions = alfanous.do({"action": "suggest", "query": value})["suggest"]
+
+for i in suggestions:
+	print i.encode("utf-8")
+	a = suggestions[i]
+	for j in a:
+		print j.encode("utf-8")
+	print " "
+# printResults(ayahs)
 
