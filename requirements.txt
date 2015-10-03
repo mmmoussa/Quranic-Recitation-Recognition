@@ -1,4 +1,5 @@
 alfanous==0.7.28
 PyAudio==0.2.8
 pyparsing==2.0.3
+python-Levenshtein==0.12.0
 SpeechRecognition==3.1.0
