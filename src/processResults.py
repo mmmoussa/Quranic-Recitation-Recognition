@@ -1,4 +1,7 @@
 
+def getMatchItem():
+	pass
+
 def printResults(ayahs):
 	if len(ayahs) > 0:
 	    # print ayahs[1]
@@ -18,6 +21,7 @@ def printResults(ayahs):
 	    print "Og: " + ayahs[1]["aya"]["text"].encode("utf-8")
 	    print "Ayah: " + arabicAyah
 	    print " "
+	    return True
 	else:
-	    print "No matches"
-	return
+	    print "\nNo matches\n"
+	    return False
