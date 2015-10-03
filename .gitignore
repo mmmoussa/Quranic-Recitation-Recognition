@@ -58,3 +58,6 @@ target/
 
 # Virtualenv
 venv/
+
+# Personal sound test file
+src/microphone-results.wav
