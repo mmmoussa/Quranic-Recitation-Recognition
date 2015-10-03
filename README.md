@@ -9,8 +9,9 @@ Sometimes you hear a beautiful Quran recitation or remember a couple words, but 
 
 ## Installation
 #### OSX
-`brew install portaudio`
-`brew install flac`
-`pip install SpeechRecognition`
-`pip install pyaudio`
-`pip install alfanous`
+- `brew install portaudio`
+- `brew install flac`
+- `virtualenv -p /usr/bin/python2.7 venv`
+- `source venv/bin/activate`
+- `pip install -r requirements.txt`
+
