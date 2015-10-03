@@ -30,8 +30,11 @@ try:
             if str is bytes: # this version of Python uses bytes for strings (Python 2)
                 print(u"You said {}".format(value).encode("utf-8"))
                 ayahs = alfanous.do({"action": "search", "query": value})["search"]["ayas"]
-                matched = printResults(ayahs)
-                if not matched:
+                if len(ayahs) > 0:
+                    matched = getMatchItem(ayahs[1]) # 1 is number given for top match by alfanous, not list index
+                    printResults(matched)
+                else:
+                    print "No matches"
                     suggestionsObj = alfanous.do({"action": "suggest", "query": value})["suggest"]
                     suggestions = {}
                     for a in suggestionsObj:

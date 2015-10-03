@@ -17,7 +17,11 @@ try:
     if str is bytes: # this version of Python uses bytes for strings (Python 2)
         print(u"You said {}".format(value).encode("utf-8"))
         ayahs = alfanous.do({"action": "search", "query": value})["search"]["ayas"]
-        printResults(ayahs)
+        if len(ayahs) > 0:
+            matched = getMatchItem(ayahs[1]) # 1 is number given for top match by alfanous, not list index
+            printResults(matched)
+        else:
+            print "No matches"
     else: # this version of Python uses unicode for strings (Python 3+)
         print("You said {}".format(value))
 except sr.UnknownValueError:
