@@ -6,25 +6,30 @@ import re
 
 
 def processText(value, skip=False):
+	# * and ? have special meaning in alfanous, and so need to be removed
+	value = value.replace("*", "")
+	value = value.replace("?", "")
 	ayahs = alfanous.do({"action": "search", "query": value})["search"]["ayas"]
 	if len(ayahs) > 0 and not skip:
 		specialCases(value)
 		levList = []
 		for item in ayahs:
-			if item < 4:
+			if item < 4: # Only use best 3 alfanous results
 				matched = getMatchItem(ayahs[item])
 				levList.append(matched)
 		bestMatch = bestLevMatch(value.encode("utf-8"), levList)
 		if bestMatch is not None:
 			printResults(bestMatch)
+			return responseJSON(value, bestMatch)
 		else:
-			processText(value, skip=True)
+			processText(value, skip=True) # Restart call ignoring initial results
 	else:
 		print "No matches. Trying fuzzy search."
 		fuzzyAyahs = alfanous.do({"action": "search", "query": value, "fuzzy": "true"})["search"]["ayas"]
 		if len(fuzzyAyahs) > 0:
 			matched = getMatchItem(fuzzyAyahs[1]) # 1 is number given for top match by alfanous, not list index
 			printResults(matched)
+			return responseJSON(value, matched)
 		else:
 			print "No matches. Trying spaces."
 			spaceAyahs = []
@@ -38,6 +43,7 @@ def processText(value, skip=False):
 			if len(spaceAyahs) > 0:
 				mostCommonMatch = mostCommon(value.encode("utf-8"), spaceAyahs)
 				printResults(mostCommonMatch)
+				return responseJSON(value, mostCommonMatch)
 			else:
 				print "No matches. Trying suggestions."
 				suggestionAyahs = []
@@ -62,6 +68,7 @@ def processText(value, skip=False):
 				if len(suggestionAyahs) > 0:
 					mostCommonMatch = mostCommon(value.encode("utf-8"), suggestionAyahs)
 					printResults(mostCommonMatch)
+					return responseJSON(value, mostCommonMatch)
 				else:
 					print "No matches. Trying spaces and suggestions."
 					ssAyahs = []
@@ -79,8 +86,10 @@ def processText(value, skip=False):
 					if len(ssAyahs) > 0:
 						mostCommonMatch = mostCommon(value.encode("utf-8"), ssAyahs)
 						printResults(mostCommonMatch)
+						return responseJSON(value, mostCommonMatch)
 					else:
 						print "No matches at all."
+						return responseJSON(value, {}, True)
 
 def getMatchItem(ayah):
 	matchItem = {
@@ -94,6 +103,7 @@ def getMatchItem(ayah):
 	arabicAyah = ayah["aya"]["text"].encode("utf-8")
 
 	while arabicAyah.find("<span") > -1:
+		# Remove html highlighting provided by alfanous from the ayah
 		startSpan1 = arabicAyah.find("<span")
 		endSpan1 = arabicAyah.find(">") + 1
 		arabicAyah = arabicAyah[:startSpan1] + arabicAyah[endSpan1:]
@@ -105,7 +115,7 @@ def getMatchItem(ayah):
 	matchItem["surahNum"] = ayah["sura"]["id"]
 	matchItem["ayahNum"] = ayah["aya"]["id"]
 	matchItem["englishSurahName"] = ayah["sura"]["english_name"]
-	matchItem["arabicSurahName"] = ayah["sura"]["arabic_name"]
+	matchItem["arabicSurahName"] = ayah["sura"]["arabic_name"].encode("utf-8")
 	matchItem["arabicAyah"] = arabicAyah
 
 	return matchItem
@@ -147,10 +157,17 @@ def bestLevMatch(spoken, lst):
 
 def printResults(ayah):
 		print " "
-		print (str(ayah["surahNum"]) + ":" + str(ayah["ayahNum"]) + ", " + ayah["englishSurahName"] + " | " + ayah["arabicSurahName"]).encode("utf-8")
+		print (str(ayah["surahNum"]) + ":" + str(ayah["ayahNum"]) + ", " + ayah["englishSurahName"] + " | " + ayah["arabicSurahName"].decode("utf-8"))
 		print "Ayah: " + ayah["arabicAyah"]
 		print " "
 
 def specialCases(value):
 	pass
+
+def responseJSON(initialValue, match, empty=False):
+	return {
+		"queryText": initialValue.encode('utf-8'),
+		"match": match,
+		"empty": empty,
+	}
 
