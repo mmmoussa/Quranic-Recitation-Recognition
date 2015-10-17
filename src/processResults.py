@@ -11,7 +11,10 @@ def processText(value, skip=False):
 	value = value.replace("?", "")
 	ayahs = alfanous.do({"action": "search", "query": value})["search"]["ayas"]
 	if len(ayahs) > 0 and not skip:
-		specialCases(value)
+		specialCasesResult = specialCases(value)
+		if specialCasesResult:
+			print "Matched a special case."
+			return specialCasesResult
 		levList = []
 		for item in ayahs:
 			if item < 4: # Only use best 3 alfanous results
@@ -162,7 +165,9 @@ def printResults(ayah):
 		print " "
 
 def specialCases(value):
-	pass
+	# if success return responseJSON
+	# else
+	return False
 
 	# TODO: Handle special cases such as surahs with letters and
 	# not words (eg. 2:1)
