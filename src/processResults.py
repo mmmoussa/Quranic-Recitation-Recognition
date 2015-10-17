@@ -89,7 +89,7 @@ def processText(value, skip=False):
 						return responseJSON(value, mostCommonMatch)
 					else:
 						print "No matches at all."
-						return responseJSON(value, {}, True)
+						return responseJSON(value, {}, empty=True)
 
 def getMatchItem(ayah):
 	matchItem = {
@@ -164,10 +164,36 @@ def printResults(ayah):
 def specialCases(value):
 	pass
 
-def responseJSON(initialValue, match, empty=False):
-	return {
+	# TODO: Handle special cases such as surahs with letters and
+	# not words (eg. 2:1)
+
+	# Idea for doing this: Keep a list made up of lists with two items.
+	# The first item is the way Google hears the speacial ayah and the 
+	# second item is the correct match object to return. If a query 
+	# matches the first item, call responseJSON with the two items.
+
+
+def responseJSON(initialValue, match, empty=False, multipleMatches=False):	
+	returnObj = {
 		"queryText": initialValue.encode('utf-8'),
 		"match": match,
 		"empty": empty,
+		"multipleMatches": multipleMatches,
+		"otherMatches": [],
 	}
+
+	return returnObj
+
+	# TODO: Handle repeated ayahs
+
+	# Idea for doing this: Maintain lists of matching verses, 
+	# using their surah number and ayah number as references 
+	# and also storing the english and arabic surah name. Once
+	# the responseJSON function is triggered, check if the match
+	# is in any of the lists. If it is, add each item in the
+	# list except the original match to otherMatches, using the
+	# details stored in the list as well as the arabic ayah text
+	# from the match item.
+
+	# Useful resource: http://www.mobware4u.com/blog/quran-repeated-verses
 
