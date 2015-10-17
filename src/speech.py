@@ -4,7 +4,6 @@ import time
 from processResults import *
 
 
-startTime = time.time()
 r = sr.Recognizer()
 m = sr.Microphone(sample_rate=44100)
 m.CHUNK = 8192
@@ -23,11 +22,12 @@ try:
 			f.write(audio.get_wav_data())
 
 		try:
+			startTime = time.time()
 			# recognize speech using Google Speech Recognition
 			value = r.recognize_google(audio, language = "ar-EG")
 
 			print(u"You said {}".format(value).encode("utf-8"))
-			print processText(value)
+			processText(value)
 			elapsedTime = time.time() - startTime
 			print "Elapsed time: " + str(elapsedTime)
 		except sr.UnknownValueError:
