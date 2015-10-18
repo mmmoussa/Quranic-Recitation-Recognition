@@ -25,7 +25,7 @@ def processText(value, skip=False):
 			printResults(bestMatch)
 			return responseJSON(value, bestMatch)
 		else:
-			processText(value, skip=True) # Restart call ignoring initial results
+			return processText(value, skip=True) # Restart call ignoring initial results
 	else:
 		print "No matches. Trying spaces."
 		spaceAyahs = []
