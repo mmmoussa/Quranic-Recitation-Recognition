@@ -1,4 +1,4 @@
-# Quran Voice Recognition
+# Quranic Recitation Recognition
 
 ## Purpose
 Sometimes you hear a beautiful Quran recitation or remember a couple words, but you don't know what surah and ayah it is. This project aims to support voice queries for identification of Quranic verses. 
