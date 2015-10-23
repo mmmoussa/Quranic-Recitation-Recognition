@@ -3,6 +3,8 @@
 from Levenshtein import ratio
 import alfanous
 import re
+import io
+import json
 
 
 def processText(value, skip=False):
@@ -172,6 +174,12 @@ def specialCases(value):
 
 
 def responseJSON(initialValue, match, empty=False, multipleMatches=False):	
+	with io.open("quran.json", 'r', encoding='utf8') as quran:
+		quranObj = json.load(quran)
+
+	if match:
+		match["englishAyah"] = quranObj[match["surahNum"] - 1]["english"][match["ayahNum"] - 1]
+
 	returnObj = {
 		"queryText": initialValue.encode('utf-8'),
 		"match": match,
@@ -179,6 +187,8 @@ def responseJSON(initialValue, match, empty=False, multipleMatches=False):
 		"multipleMatches": multipleMatches,
 		"otherMatches": [],
 	}
+
+
 
 	return returnObj
 
