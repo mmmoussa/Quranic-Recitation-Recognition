@@ -13,10 +13,6 @@ def processText(value, skip=False):
 	value = value.replace("?", "")
 	ayahs = alfanous.do({"action": "search", "query": value})["search"]["ayas"]
 	if len(ayahs) > 0 and not skip:
-		specialCasesResult = specialCases(value)
-		if specialCasesResult:
-			print "Matched a special case."
-			return specialCasesResult
 		levList = []
 		for item in ayahs:
 			if item < 4: # Only use best 3 alfanous results
@@ -86,8 +82,14 @@ def processText(value, skip=False):
 					printResults(mostCommonMatch)
 					return responseJSON(value, mostCommonMatch)
 				else:
-					print "No matches at all."
-					return responseJSON(value, {}, empty=True)
+					specialCasesResult = specialCases(value)
+					if specialCasesResult:
+						print "Matched a special case."
+						printResults(specialCasesResult)
+						return responseJSON(value, specialCasesResult)
+					else:
+						print "No matches at all."
+						return responseJSON(value, {}, empty=True)
 
 def getMatchItem(ayah):
 	matchItem = {
@@ -163,18 +165,25 @@ def printResults(ayah):
 		print " "
 
 def specialCases(value):
-	# if success return responseJSON
-	# else
+	specialCases = [
+		[
+			"الف لام ميم",
+			{
+				"surahNum": 2,
+				"ayahNum": 1,
+				"englishSurahName": "Al-Baqara",
+				"arabicSurahName": "سورة البقرة ",
+				"arabicAyah": "الم",
+				# englishAyah already gets added in responseJSON
+			}
+		]
+	]
+	
+	for case in specialCases:
+		if case[0] == value.encode("utf-8"):
+			return case[1]
+
 	return False
-
-	# TODO: Handle special cases such as surahs with letters and
-	# not words (eg. 2:1)
-
-	# Idea for doing this: Keep a list made up of lists with two items.
-	# The first item is the way Google hears the speacial ayah and the 
-	# second item is the correct match object to return. If a query 
-	# matches the first item, call responseJSON with the two items.
-
 
 def responseJSON(initialValue, match, empty=False):	
 	multipleMatches = False
