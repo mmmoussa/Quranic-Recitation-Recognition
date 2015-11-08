@@ -110,10 +110,13 @@ def getMatchItem(ayah):
 		endSpan2 = arabicAyah.find("</span>") + 7
 		arabicAyah = arabicAyah[:startSpan2] + arabicAyah[endSpan2:]
 
+	with io.open("surahNames.json", 'r', encoding='utf8') as surahNames:
+		surahNamesObj = json.load(surahNames)
+
 	matchItem["surahNum"] = ayah["sura"]["id"]
 	matchItem["ayahNum"] = ayah["aya"]["id"]
-	matchItem["englishSurahName"] = ayah["sura"]["english_name"]
-	matchItem["arabicSurahName"] = ayah["sura"]["arabic_name"].encode("utf-8")
+	matchItem["englishSurahName"] = surahNamesObj[0]["english"][ayah["sura"]["id"] - 1]
+	matchItem["arabicSurahName"] = surahNamesObj[0]["arabic"][ayah["sura"]["id"] - 1].encode("utf-8")
 	matchItem["arabicAyah"] = arabicAyah
 
 	return matchItem
