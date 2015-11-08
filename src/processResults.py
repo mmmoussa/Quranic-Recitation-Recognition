@@ -6,26 +6,30 @@ import re
 import io
 import json
 
+suggestions = {}
 
-def processText(value, skip=False):
-	# * and ? have special meaning in alfanous, and so need to be removed
-	value = value.replace("*", "")
-	value = value.replace("?", "")
-	ayahs = alfanous.do({"action": "search", "query": value})["search"]["ayas"]
-	if len(ayahs) > 0 and not skip:
-		levList = []
-		for item in ayahs:
-			if item < 4: # Only use best 3 alfanous results
-				matched = getMatchItem(ayahs[item])
-				levList.append(matched)
-		bestMatch = bestLevMatch(value.encode("utf-8"), levList)
-		if bestMatch is not None:
-			printResults(bestMatch)
-			return responseJSON(value, bestMatch)
+def processText(value, skip1=False, skip2=False, skip3=False, skip4=False):
+	if not skip1 and not skip2 and not skip3 and not skip4:
+		# * and ? have special meaning in alfanous, and so need to be removed
+		value = value.replace("*", "")
+		value = value.replace("?", "")
+		ayahs = alfanous.do({"action": "search", "query": value})["search"]["ayas"]
+		if len(ayahs) > 0: 
+			levList = []
+			for item in ayahs:
+				if item < 4: # Only use best 3 alfanous results
+					matched = getMatchItem(ayahs[item])
+					levList.append(matched)
+			bestMatch = bestLevMatch(value.encode("utf-8"), levList)
+			if bestMatch is not None:
+				printResults(bestMatch)
+				return responseJSON(value, bestMatch)
+			else:
+				return processText(value, skip1=True) # Restart call ignoring initial results
 		else:
-			return processText(value, skip=True) # Restart call ignoring initial results
-	else:
-		print "No matches. Trying spaces."
+			return processText(value, skip1=True)
+	elif not skip2 and not skip3 and not skip4:
+		print "\nNo matches. Trying spaces."
 		spaceAyahs = []
 		spaces = [space.start() for space in re.finditer(' ', value)]
 		for space in spaces:
@@ -36,60 +40,74 @@ def processText(value, skip=False):
 				spaceAyahs.append(spacedMatched)
 		if len(spaceAyahs) > 0:
 			mostCommonMatch = mostCommon(value.encode("utf-8"), spaceAyahs)
-			printResults(mostCommonMatch)
-			return responseJSON(value, mostCommonMatch)
-		else:
-			print "No matches. Trying suggestions."
-			suggestionAyahs = []
-			suggestionsObj = alfanous.do({"action": "suggest", "query": value})["suggest"]
-			suggestions = {}
-			for a in suggestionsObj:
-				suggestions[a] = []
-				b = suggestionsObj[a]
-				for c in b:
-					suggestions[a].append(c)
-			
-			for i in suggestions:
-				for j in suggestions[i]:
-					newValue = value.replace(i, j)
-					# print i
-					# print j
-					# print newValue
-					newAyahs = alfanous.do({"action": "search", "query": newValue})["search"]["ayas"]
-					if len(newAyahs) > 0:
-						newMatched = getMatchItem(newAyahs[1])
-						suggestionAyahs.append(newMatched)
-			if len(suggestionAyahs) > 0:
-				mostCommonMatch = mostCommon(value.encode("utf-8"), suggestionAyahs)
+			if levDistanceCompare(value.encode("utf-8"), mostCommonMatch["arabicAyah"], 0.5):
 				printResults(mostCommonMatch)
 				return responseJSON(value, mostCommonMatch)
 			else:
-				print "No matches. Trying spaces and suggestions."
-				ssAyahs = []
-				for i in suggestions:
-					for j in suggestions[i]:
-						newValue = value.replace(i, j)
-						spaces = [space.start() for space in re.finditer(' ', newValue)]
-						for space in spaces:
-							ssValue = newValue[:space] + newValue[(space+1):]
-							newAyahs = alfanous.do({"action": "search", "query": ssValue})["search"]["ayas"]
-							if len(newAyahs) > 0:
-								ssMatched = getMatchItem(newAyahs[1])
-								ssAyahs.append(ssMatched)
+				return processText(value, skip2=True)
+		else:
+			return processText(value, skip2=True)
+	elif not skip3 and not skip4:
+		print "\nNo matches. Trying suggestions."
+		suggestionAyahs = []
+		suggestionsObj = alfanous.do({"action": "suggest", "query": value})["suggest"]
+		for a in suggestionsObj:
+			suggestions[a] = []
+			b = suggestionsObj[a]
+			for c in b:
+				suggestions[a].append(c)
+		
+		for i in suggestions:
+			for j in suggestions[i]:
+				newValue = value.replace(i, j)
+				# print i
+				# print j
+				# print newValue
+				newAyahs = alfanous.do({"action": "search", "query": newValue})["search"]["ayas"]
+				if len(newAyahs) > 0:
+					newMatched = getMatchItem(newAyahs[1])
+					suggestionAyahs.append(newMatched)
+		if len(suggestionAyahs) > 0:
+			mostCommonMatch = mostCommon(value.encode("utf-8"), suggestionAyahs)
+			if levDistanceCompare(value.encode("utf-8"), mostCommonMatch["arabicAyah"], 0.5):
+				printResults(mostCommonMatch)
+				return responseJSON(value, mostCommonMatch)
+			else:
+				return processText(value, skip3=True)
+		else:
+			return processText(value, skip3=True)
+	elif not skip4:
+		print "\nNo matches. Trying spaces and suggestions."
+		ssAyahs = []
+		for i in suggestions:
+			for j in suggestions[i]:
+				newValue = value.replace(i, j)
+				spaces = [space.start() for space in re.finditer(' ', newValue)]
+				for space in spaces:
+					ssValue = newValue[:space] + newValue[(space+1):]
+					newAyahs = alfanous.do({"action": "search", "query": ssValue})["search"]["ayas"]
+					if len(newAyahs) > 0:
+						ssMatched = getMatchItem(newAyahs[1])
+						ssAyahs.append(ssMatched)
 
-				if len(ssAyahs) > 0:
-					mostCommonMatch = mostCommon(value.encode("utf-8"), ssAyahs)
-					printResults(mostCommonMatch)
-					return responseJSON(value, mostCommonMatch)
-				else:
-					specialCasesResult = specialCases(value)
-					if specialCasesResult:
-						print "Matched a special case."
-						printResults(specialCasesResult)
-						return responseJSON(value, specialCasesResult)
-					else:
-						print "No matches at all."
-						return responseJSON(value, {}, empty=True)
+		if len(ssAyahs) > 0:
+			mostCommonMatch = mostCommon(value.encode("utf-8"), ssAyahs)
+			if levDistanceCompare(value.encode("utf-8"), mostCommonMatch["arabicAyah"], 0.5):
+				printResults(mostCommonMatch)
+				return responseJSON(value, mostCommonMatch)
+			else:
+				return processText(value, skip4=True)
+		else:
+			return processText(value, skip4=True)
+	else:
+		specialCasesResult = specialCases(value)
+		if specialCasesResult:
+			print "\nMatched a special case."
+			printResults(specialCasesResult)
+			return responseJSON(value, specialCasesResult)
+		else:
+			print "\nNo matches at all."
+			return responseJSON(value, {}, empty=True)
 
 def getMatchItem(ayah):
 	matchItem = {
@@ -157,6 +175,12 @@ def bestLevMatch(spoken, lst):
 		return bestMatch[0]
 	else:
 		return None
+
+def levDistanceCompare(str1, str2, value):
+	if ratio(str1, str2) > value:
+		return True
+	else:
+		return False
 
 def printResults(ayah):
 		print " "
