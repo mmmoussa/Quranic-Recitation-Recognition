@@ -6,6 +6,7 @@ import re
 import io
 import json
 
+
 suggestions = {}
 
 def processText(value, skip1=False, skip2=False, skip3=False, skip4=False):
